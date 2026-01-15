@@ -3,6 +3,8 @@ package workflow
 import (
 	"context"
 	"time"
+
+	"github.com/mirkobrombin/go-foundation/pkg/resiliency"
 )
 
 type RetryPolicy struct {
@@ -13,31 +15,12 @@ type RetryPolicy struct {
 
 func WithRetry(policy RetryPolicy, do func(context.Context) error) func(context.Context) error {
 	return func(ctx context.Context) error {
-		var lastErr error
-		delay := policy.Delay
-
-		for i := 1; i <= policy.MaxAttempts; i++ {
-			if ctx.Err() != nil {
-				return ctx.Err()
-			}
-
-			if err := do(ctx); err == nil {
-				return nil
-			} else {
-				lastErr = err
-			}
-
-			if i < policy.MaxAttempts {
-				select {
-				case <-ctx.Done():
-					return ctx.Err()
-				case <-time.After(delay):
-					if policy.Multiplier > 1 {
-						delay = time.Duration(float64(delay) * policy.Multiplier)
-					}
-				}
-			}
-		}
-		return lastErr
+		return resiliency.Retry(ctx, func() error {
+			return do(ctx)
+		},
+			resiliency.WithAttempts(policy.MaxAttempts),
+			resiliency.WithDelay(policy.Delay, 24*time.Hour),
+			resiliency.WithFactor(policy.Multiplier),
+		)
 	}
 }
