@@ -4,38 +4,33 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/mirkobrombin/go-revert/v2/pkg/engine"
-	"github.com/mirkobrombin/go-revert/v2/pkg/step"
+	"github.com/mirkobrombin/go-revert/v2/pkg/workflow"
 )
 
 func main() {
-	wf := engine.New()
+	wf := workflow.New()
 
-	// Step 1: Reserve Stock
-	wf.Add(&step.Basic{
-		Name: "Reserve Stock",
-		OnExecute: func(ctx context.Context) error {
+	wf.Add("Reserve Stock",
+		func(ctx context.Context) error {
 			fmt.Println("Step 1: Reserving Stock...")
 			return nil
 		},
-		OnUndo: func(ctx context.Context) error {
+		func(ctx context.Context) error {
 			fmt.Println("Undo 1: Releasing Stock")
 			return nil
 		},
-	})
+	)
 
-	// Step 2: Charge Card (Fails)
-	wf.Add(&step.Basic{
-		Name: "Charge Card",
-		OnExecute: func(ctx context.Context) error {
+	wf.Add("Charge Card",
+		func(ctx context.Context) error {
 			fmt.Println("Step 2: Charging Card...")
 			return fmt.Errorf("insufficient funds")
 		},
-		OnUndo: func(ctx context.Context) error {
+		func(ctx context.Context) error {
 			fmt.Println("Undo 2: Refund Card")
 			return nil
 		},
-	})
+	)
 
 	fmt.Println("Starting Workflow...")
 	if err := wf.Run(context.Background()); err != nil {
