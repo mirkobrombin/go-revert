@@ -1,5 +1,8 @@
 # Go Revert (Saga Pattern)
 
+> [!CAUTION]
+> go-revert is now part of the [go-foundation](https://github.com/mirkobrombin/go-foundation) framework. The v1.0.0 release mirrors go-revert v2.1.0, but future versions may introduce breaking changes. Please migrate your project.
+
 **Go Revert** is a minimal, robust library for providing **Application-Level Atomicity** using the Saga Pattern (Forward Compensation).
 
 It allows you to define workflows where each step has a corresponding rollback action. If any step fails (or panics), the library automatically executes the rollback actions of all previously successful steps in reverse order (LIFO), ensuring your system returns to a consistent state.
